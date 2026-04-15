@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRILAK - Sistema de Gestión de Producción</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: #19485a;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .sidebar p {
+            font-size: 12px;
+            text-align: center;
+            opacity: 0.8;
+            margin-bottom: 40px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding-bottom: 20px;
+        }
+
+        .nav-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background-color: transparent;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: left;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-item.active {
+            background-color: #FF6B35;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: white;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h2 {
+            color: #19485a;
+            font-size: 18px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        h1 {
+            color: #19485a;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        h2 {
+            color: #19485a;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #19485a;
+            box-shadow: 0 0 5px rgba(25, 72, 90, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .card {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #FF6B35;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .card p {
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .card-title {
+            font-weight: bold;
+            color: #19485a;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .stock-info {
+            padding: 10px;
+            background-color: #f0f7ff;
+            border-radius: 4px;
+            margin-top: 5px;
+            font-size: 13px;
+            color: #0066cc;
+            display: none;
+        }
+
+        .stock-info.show {
+            display: block;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 5px solid #19485a;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .metric-card.secondary {
+            border-left-color: #FF6B35;
+        }
+
+        .metric-card.success {
+            border-left-color: #4CAF50;
+        }
+
+        .metric-card.warning {
+            border-left-color: #FFC107;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #19485a;
+        }
+
+        .material-selection {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .material-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .footer {
+            background-color: white;
+            padding: 15px;
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+            font-size: 12px;
+            color: #999;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <h1>TRILAK</h1>
+            <p>Sistema de Gestión</p>
+            
+            <button class="nav-item active" onclick="mostrarSeccion('dashboard')">📊 Dashboard</button>
+            <button class="nav-item" onclick="mostrarSeccion('pedidos')">📋 Pedidos</button>
+            <button class="nav-item" onclick="mostrarSeccion('produccion')">📝 Producción</button>
+            <button class="nav-item" onclick="mostrarSeccion('tipos')">⚽ Tipos Balón</button>
+            <button class="nav-item" onclick="mostrarSeccion('operarios')">👥 Operarios</button>
+            <button class="nav-item" onclick="mostrarSeccion('inventario')">📦 Inventario</button>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main">
+            <!-- HEADER -->
+            <div class="header">
+                <h2 id="titulo-seccion">📊 Dashboard</h2>
+                <p>Usuario: Admin</p>
+            </div>
+
+            <!-- CONTENT -->
+            <div class="content">
+
+                <!-- ========== DASHBOARD ========== -->
+                <div id="dashboard" class="section active">
+                    <h1>📊 Dashboard</h1>
+                    
+                    <div class="dashboard-grid" id="metricas-container">
+                        <div class="metric-card">
+                            <p class="metric-label">Total Pedidos</p>
+                            <p class="metric-value" id="total-pedidos">0</p>
+                        </div>
+                        <div class="metric-card secondary">
+                            <p class="metric-label">Total Operarios</p>
+                            <p class="metric-value" id="total-operarios">0</p>
+                        </div>
+                        <div class="metric-card success">
+                            <p class="metric-label">Consumo Material (m)</p>
+                            <p class="metric-value" id="consumo-total">0</p>
+                        </div>
+                        <div class="metric-card warning">
+                            <p class="metric-label">Materiales Bajo Stock</p>
+                            <p class="metric-value" id="materiales-bajo-stock">0</p>
+                        </div>
+                    </div>
+
+                    <h2>Materiales Más Utilizados</h2>
+                    <div id="materiales-utilizados" style="margin-bottom: 30px;"></div>
+
+                    <h2>Tareas Realizadas</h2>
+                    <div id="tareas-realizadas"></div>
+                </div>
+
+                <!-- ========== PEDIDOS ========== -->
+                <div id="pedidos" class="section">
+                    <h1>📋 Pedidos</h1>
+                    
+                    <div class="form-container">
+                        <h2>Crear Nuevo Pedido</h2>
+                        
+                        <div class="form-group">
+                            <label>Número de Pedido</label>
+                            <input type="text" id="numero-pedido" placeholder="PED-001" value="PED-">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Cliente</label>
+                            <input type="text" id="cliente-pedido" placeholder="Nombre del cliente">
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Tipo de Balón</label>
+                                <select id="tipo-balon-pedido">
+                                    <option value="">-- Seleccionar Tipo --</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Cantidad de Balones</label>
+                                <input type="number" id="cantidad-balones" placeholder="100" min="1">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Fecha de Entrega</label>
+                            <input type="date" id="fecha-entrega-pedido">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Observaciones</label>
+                            <textarea id="observaciones-pedido" placeholder="Notas adicionales..."></textarea>
+                        </div>
+
+                        <h2 style="margin-top: 20px;">Materiales del Pedido</h2>
+                        <div id="materiales-pedido-container"></div>
+
+                        <button class="btn" onclick="agregarMaterialPedido()" style="margin-bottom: 15px;">+ Agregar Material</button>
+                        <button class="btn" onclick="crearPedido()">✅ Crear Pedido</button>
+                    </div>
+
+                    <h2>Pedidos Registrados</h2>
+                    <div id="lista-pedidos"></div>
+                </div>
+
+                <!-- ========== PRODUCCIÓN ========== -->
+                <div id="produccion" class="section">
+                    <h1>📝 Registro de Producción</h1>
+                    
+                    <div class="form-container">
+                        <h2>Nueva Tarea Realizada</h2>
+                        
+                        <div class="form-group">
+                            <label>Operario</label>
+                            <select id="operario-produccion">
+                                <option value="">-- Seleccionar Operario --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tarea</label>
+                            <select id="tarea-produccion">
+                                <option value="">-- Seleccionar Tarea --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Pedido (opcional)</label>
+                            <select id="pedido-produccion">
+                                <option value="">-- Seleccionar Pedido --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Cantidad Producida</label>
+                            <input type="number" id="cantidad-producida" placeholder="100" min="1" value="1">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Fecha</label>
+                            <input type="date" id="fecha-produccion">
+                        </div>
+
+                        <!-- ✨ NUEVA SECCIÓN: MATERIAL Y DESCUENTO ✨ -->
+                        <div class="material-selection">
+                            <h2 style="margin-top: 0;">Descuento de Material</h2>
+                            
+                            <div class="form-group">
+                                <label>Material a Descontar</label>
+                                <select id="material-produccion" onchange="mostrarStockMaterial()">
+                                    <option value="">-- Seleccionar Material --</option>
+                                </select>
+                                <div class="stock-info" id="stock-info"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Cantidad a Descontar (metros)</label>
+                                <input type="number" id="cantidad-material-descontar" 
+                                       placeholder="0" min="0" step="0.1" value="0">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Observaciones (opcional)</label>
+                            <textarea id="observaciones-produccion" placeholder="Notas adicionales..."></textarea>
+                        </div>
+
+                        <button class="btn" onclick="registrarProduccion()">✅ Registrar Producción</button>
+                    </div>
+
+                    <h2 style="margin-top: 20px;">Últimos Registros</h2>
+                    <div id="lista-produccion"></div>
+                </div>
+
+                <!-- ========== TIPOS BALÓN ========== -->
+                <div id="tipos" class="section">
+                    <h1>⚽ Tipos de Balones</h1>
+                    <div id="lista-tipos" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;"></div>
+                </div>
+
+                <!-- ========== OPERARIOS ========== -->
+                <div id="operarios" class="section">
+                    <h1>👥 Operarios</h1>
+                    <div id="lista-operarios" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;"></div>
+                </div>
+
+                <!-- ========== INVENTARIO ========== -->
+                <div id="inventario" class="section">
+                    <h1>📦 Inventario de Materiales</h1>
+                    <div id="lista-materiales" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;"></div>
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="footer">
+                © 2026 TRILAK - Sistema de Gestión de Producción v2.0
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:5001/api';
+        let materiales = [];
+        let operarios = [];
+        let tareas = [];
+        let tipos = [];
+        let pedidos = [];
+        let produccion = [];
+        let metricas = {};
+
+        // ========== INICIALIZACIÓN ==========
+        document.addEventListener('DOMContentLoaded', async () => {
+            await inicializarBD();
+            await cargarDatos();
+            establecerFechaHoy();
+        });
+
+        async function inicializarBD() {
+            try {
+                await fetch(`${API_URL}/inicializar`, { method: 'POST' });
+                console.log('✅ BD inicializada');
+            } catch (e) {
+                console.log('⚠️ BD ya existe');
+            }
+        }
+
+        async function cargarDatos() {
+            try {
+                // Cargar todos los datos en paralelo
+                const [res1, res2, res3, res4, res5, res6] = await Promise.all([
+                    fetch(`${API_URL}/tipos-balon`),
+                    fetch(`${API_URL}/operarios`),
+                    fetch(`${API_URL}/tareas`),
+                    fetch(`${API_URL}/materiales`),
+                    fetch(`${API_URL}/pedidos`),
+                    fetch(`${API_URL}/produccion`)
+                ]);
+
+                tipos = await res1.json();
+                operarios = await res2.json();
+                tareas = await res3.json();
+                materiales = await res4.json();
+                pedidos = await res5.json();
+                produccion = await res6.json();
+
+                await cargarDashboard();
+                llenarSelects();
+                mostrarTodos();
+            } catch (error) {
+                console.error('❌ Error cargando datos:', error);
+            }
+        }
+
+        // ========== FUNCIONES DE UI ==========
+        function mostrarSeccion(seccion) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            // Mostrar sección seleccionada
+            document.getElementById(seccion).classList.add('active');
+            event.target.classList.add('active');
+
+            // Actualizar título
+            const titulos = {
+                dashboard: '📊 Dashboard',
+                pedidos: '📋 Pedidos',
+                produccion: '📝 Producción',
+                tipos: '⚽ Tipos de Balones',
+                operarios: '👥 Operarios',
+                inventario: '📦 Inventario'
+            };
+            document.getElementById('titulo-seccion').textContent = titulos[seccion];
+        }
+
+        function establecerFechaHoy() {
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('fecha-produccion').value = hoy;
+            document.getElementById('fecha-entrega-pedido').value = hoy;
+        }
+
+        // ========== LLENAR SELECTS ==========
+        function llenarSelects() {
+            // Tipos de balón
+            const selectTipo = document.getElementById('tipo-balon-pedido');
+            tipos.forEach(t => {
+                selectTipo.innerHTML += `<option value="${t.id}">${t.nombre}</option>`;
+            });
+
+            // Operarios
+            const selectOp = document.getElementById('operario-produccion');
+            operarios.forEach(o => {
+                selectOp.innerHTML += `<option value="${o.id}">${o.nombre}</option>`;
+            });
+
+            // Tareas
+            const selectTarea = document.getElementById('tarea-produccion');
+            tareas.forEach(t => {
+                selectTarea.innerHTML += `<option value="${t.id}">${t.nombre}</option>`;
+            });
+
+            // Pedidos
+            const selectPedido = document.getElementById('pedido-produccion');
+            pedidos.forEach(p => {
+                selectPedido.innerHTML += `<option value="${p.id}">${p.numero_pedido} - ${p.cliente}</option>`;
+            });
+
+            // Materiales (NUEVA)
+            const selectMat = document.getElementById('material-produccion');
+            materiales.forEach(m => {
+                selectMat.innerHTML += `<option value="${m.id}">${m.nombre}</option>`;
+            });
+
+            // Materiales para pedidos
+            const selectMatPedido = document.querySelectorAll('.material-select-pedido');
+            selectMatPedido.forEach(select => {
+                materiales.forEach(m => {
+                    const option = document.createElement('option');
+                    option.value = m.id;
+                    option.textContent = `${m.nombre} (${m.cantidad_disponible}m)`;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        // ========== MOSTRAR STOCK DEL MATERIAL ==========
+        function mostrarStockMaterial() {
+            const materialId = document.getElementById('material-produccion').value;
+            const stockInfo = document.getElementById('stock-info');
+
+            if (!materialId) {
+                stockInfo.classList.remove('show');
+                return;
+            }
+
+            const material = materiales.find(m => m.id == materialId);
+            if (material) {
+                stockInfo.textContent = `📦 Stock actual: ${material.cantidad_disponible} ${material.unidad}`;
+                stockInfo.classList.add('show');
+            }
+        }
+
+        // ========== PRODUCCIÓN ==========
+        async function registrarProduccion() {
+            const operarioId = document.getElementById('operario-produccion').value;
+            const tareaId = document.getElementById('tarea-produccion').value;
+            const pedidoId = document.getElementById('pedido-produccion').value || null;
+            const cantidadProducida = document.getElementById('cantidad-producida').value;
+            const fecha = document.getElementById('fecha-produccion').value;
+            const observaciones = document.getElementById('observaciones-produccion').value;
+
+            // ✨ NUEVA: Material y descuento
+            const materialId = document.getElementById('material-produccion').value;
+            const cantidadDescontar = parseFloat(document.getElementById('cantidad-material-descontar').value) || 0;
+
+            if (!operarioId || !tareaId) {
+                alert('❌ Selecciona operario y tarea');
+                return;
+            }
+
+            if (cantidadDescontar > 0 && !materialId) {
+                alert('❌ Si descontas material, debes seleccionarlo');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/produccion`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        operario_id: parseInt(operarioId),
+                        tarea_id: parseInt(tareaId),
+                        pedido_id: pedidoId ? parseInt(pedidoId) : null,
+                        cantidad_producida: parseFloat(cantidadProducida),
+                        material_id: materialId ? parseInt(materialId) : null,
+                        cantidad_material_descontada: cantidadDescontar,
+                        fecha: fecha,
+                        observaciones: observaciones
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(`✅ Producción registrada\n${data.mensaje || ''}`);
+                    document.querySelector('.form-container').reset();
+                    establecerFechaHoy();
+                    await cargarDatos();
+                } else {
+                    alert(`❌ ${data.error}`);
+                }
+            } catch (error) {
+                alert(`❌ Error: ${error.message}`);
+            }
+        }
+
+        // ========== PEDIDOS ==========
+        function agregarMaterialPedido() {
+            const container = document.getElementById('materiales-pedido-container');
+            const materialSelect = document.createElement('div');
+            materialSelect.className = 'material-row';
+            materialSelect.innerHTML = `
+                <select class="material-select-pedido" required>
+                    <option value="">-- Seleccionar Material --</option>
+                </select>
+                <input type="number" class="cantidad-material-pedido" placeholder="Cantidad (m)" min="0" step="0.1" required>
+            `;
+            container.appendChild(materialSelect);
+
+            // Llenar el nuevo select
+            const select = materialSelect.querySelector('.material-select-pedido');
+            materiales.forEach(m => {
+                const option = document.createElement('option');
+                option.value = m.id;
+                option.textContent = `${m.nombre} (${m.cantidad_disponible}m)`;
+                select.appendChild(option);
+            });
+        }
+
+        async function crearPedido() {
+            const numeroPedido = document.getElementById('numero-pedido').value;
+            const cliente = document.getElementById('cliente-pedido').value;
+            const tipoBalon = document.getElementById('tipo-balon-pedido').value;
+            const cantidadBalones = document.getElementById('cantidad-balones').value;
+            const fechaEntrega = document.getElementById('fecha-entrega-pedido').value;
+            const observaciones = document.getElementById('observaciones-pedido').value;
+
+            if (!numeroPedido || !cliente || !tipoBalon) {
+                alert('❌ Completa los campos requeridos');
+                return;
+            }
+
+            // Obtener materiales
+            const materiales_pedido = [];
+            document.querySelectorAll('.material-row').forEach(row => {
+                const materialId = row.querySelector('.material-select-pedido').value;
+                const cantidad = row.querySelector('.cantidad-material-pedido').value;
+                if (materialId && cantidad) {
+                    materiales_pedido.push({
+                        material_id: parseInt(materialId),
+                        cantidad: parseFloat(cantidad)
+                    });
+                }
+            });
+
+            try {
+                const response = await fetch(`${API_URL}/pedidos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        numero_pedido: numeroPedido,
+                        cliente: cliente,
+                        tipo_balon_id: parseInt(tipoBalon),
+                        cantidad_balones: parseFloat(cantidadBalones) || 0,
+                        fecha_entrega_solicitada: fechaEntrega,
+                        observaciones: observaciones,
+                        materiales: materiales_pedido
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('✅ Pedido creado correctamente');
+                    document.querySelector('.form-container').reset();
+                    document.getElementById('numero-pedido').value = 'PED-';
+                    document.getElementById('materiales-pedido-container').innerHTML = '';
+                    await cargarDatos();
+                } else {
+                    alert(`❌ ${data.error}`);
+                }
+            } catch (error) {
+                alert(`❌ Error: ${error.message}`);
+            }
+        }
+
+        // ========== DASHBOARD ==========
+        async function cargarDashboard() {
+            try {
+                const response = await fetch(`${API_URL}/dashboard`);
+                metricas = (await response.json()).metricas;
+
+                document.getElementById('total-pedidos').textContent = metricas.total_pedidos;
+                document.getElementById('total-operarios').textContent = metricas.total_operarios;
+                document.getElementById('consumo-total').textContent = metricas.consumo_material_total.toFixed(2);
+                document.getElementById('materiales-bajo-stock').textContent = metricas.materiales_bajo_stock;
+
+                // Materiales más utilizados
+                const matUtil = document.getElementById('materiales-utilizados');
+                matUtil.innerHTML = metricas.materiales_mas_utilizados.map(m => 
+                    `<div class="card"><p class="card-title">${m.material}</p><p>${m.cantidad} metros</p></div>`
+                ).join('');
+
+                // Tareas realizadas
+                const tareasDiv = document.getElementById('tareas-realizadas');
+                tareasDiv.innerHTML = metricas.tareas_realizadas.map(t => 
+                    `<div class="card"><p class="card-title">${t.tarea}</p><p>${t.cantidad} registros</p></div>`
+                ).join('');
+            } catch (error) {
+                console.error('Error cargando dashboard:', error);
+            }
+        }
+
+        // ========== MOSTRAR TODO ==========
+        function mostrarTodos() {
+            mostrarTipos();
+            mostrarOperarios();
+            mostrarMateriales();
+            mostrarPedidos();
+            mostrarProduccion();
+        }
+
+        function mostrarTipos() {
+            const lista = document.getElementById('lista-tipos');
+            lista.innerHTML = tipos.map(t => 
+                `<div class="card"><p class="card-title">${t.nombre}</p></div>`
+            ).join('');
+        }
+
+        function mostrarOperarios() {
+            const lista = document.getElementById('lista-operarios');
+            lista.innerHTML = operarios.map(o => 
+                `<div class="card"><p class="card-title">${o.nombre}</p><p>Estado: ${o.estado}</p></div>`
+            ).join('');
+        }
+
+        function mostrarMateriales() {
+            const lista = document.getElementById('lista-materiales');
+            lista.innerHTML = materiales.map(m => 
+                `<div class="card"><p class="card-title">${m.nombre}</p><p>Stock: ${m.cantidad_disponible} ${m.unidad}</p>${m.cantidad_disponible < 50 ? '<p style="color: orange;">⚠️ Stock bajo</p>' : ''}</div>`
+            ).join('');
+        }
+
+        function mostrarPedidos() {
+            const lista = document.getElementById('lista-pedidos');
+            lista.innerHTML = pedidos.map(p => 
+                `<div class="card"><p class="card-title">${p.numero_pedido}</p><p><strong>Cliente:</strong> ${p.cliente}</p><p><strong>Estado:</strong> ${p.estado}</p><p><strong>Materiales:</strong> ${p.materiales.length}</p></div>`
+            ).join('');
+        }
+
+        function mostrarProduccion() {
+            const lista = document.getElementById('lista-produccion');
+            lista.innerHTML = produccion.slice(0, 10).map(p => 
+                `<div class="card"><p>${new Date(p.fecha).toLocaleDateString()}</p><p class="card-title">${p.operario_nombre}</p><p>Tarea: ${p.tarea_nombre}</p>${p.material_nombre ? `<p>Material descontado: ${p.cantidad_material_descontada}m de ${p.material_nombre}</p>` : ''}</div>`
+            ).join('');
+        }
+    </script>
+</body>
+</html>
