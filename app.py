@@ -707,7 +707,6 @@ if __name__ == '__main__':
     print("📡  Servidor en: http://127.0.0.1:5002")
     print(f"📦  Inventario vinculado: {INVENTARIO_DB_PATH}")
     print("=" * 60)
-
-      import os
+import os
     port = int(os.environ.get('PORT', 5002))
     app.run(host='0.0.0.0', port=port, debug=False)
