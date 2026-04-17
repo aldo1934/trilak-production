@@ -9,7 +9,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
-app.secret_key = 'tu_clave_secreta_aqui'
+app.secret_key = os.environ.get('SECRET_KEY', 'una_clave_muy_segura_por_defecto')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///trilak.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSON_SORT_KEYS'] = False
@@ -344,6 +344,9 @@ def cargar_materiales_sgii():
             ))
     db.session.commit()
 
+
+# ======================== RUTAS DE AUTENTICACIÓN ========================
+
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.json
@@ -355,10 +358,12 @@ def login():
         return jsonify({'ok': True})
     return jsonify({'ok': False}), 401
 
+
 @app.route('/api/logout', methods=['POST'])
 def logout():
     session.pop('logged_in', None)
     return jsonify({'ok': True})
+
 
 def login_required(f):
     from functools import wraps
@@ -369,69 +374,21 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
 # ======================== RUTAS API ========================
 
 @app.route('/api/inicializar', methods=['POST'])
-@login_required
 def inicializar_bd():
-    # Esta ruta la pide tu App.jsx al inicio
     db.create_all()
-    inicializar_datos() # La función que ya creamos
+    inicializar_datos()
+    cargar_materiales_sgii()
     return jsonify({"mensaje": "BD Lista"}), 200
 
+
 @app.route('/api/tipos-balon', methods=['GET'])
-@login_required
 def get_tipos_balon():
     tipos = TipoBalon.query.all()
     return jsonify([t.to_dict() for t in tipos])
-
-
-@app.route('/api/materiales', methods=['GET'])
-@login_required
-def listar_materiales_api():
-    # Tu App.jsx espera 'cantidad_disponible' y 'unidad'
-    mats = Material.query.all()
-    return jsonify([{
-        "id": m.id, 
-        "nombre": m.nombre, 
-        "cantidad_disponible": 100, # O el stock real de SGII
-        "unidad": "metros"
-    } for m in mats])
-
-@app.route('/api/produccion', methods=['GET', 'POST'])
-@login_required
-def gestionar_produccion():
-    if request.method == 'POST':
-        data = request.json
-        nueva_p = Produccion(
-            operario_id=data['operario_id'],
-            tarea_id=data['tarea_id'],
-            pedido_id=data.get('pedido_id'),
-            # cantidad=data.get('cantidad', 1) # Asegúrate que tu modelo tenga 'cantidad'
-        )
-        db.session.add(nueva_p)
-        db.session.commit()
-        return jsonify({"ok": True}), 201
-    
-    # Para el listado de producción
-    prods = Produccion.query.all()
-    return jsonify([{
-        "id": p.id,
-        "operario_nombre": p.operario.nombre,
-        "tarea_nombre": p.tarea.nombre,
-        "fecha": p.fecha.isoformat(),
-        "cantidad": 1 # valor por defecto
-    } for p in prods])
-
-
-    # ======================== RUTAS PARA SERVIR EL FRONTEND ========================
-
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve(path):
-    if path and (path.startswith('static/') or path.startswith('assets/')):
-        return send_from_directory('build', path)
-    return send_from_directory('build', 'index.html')
 
 
 # ── OPERARIOS ─────────────────────────────────────────────────────────────────
@@ -709,6 +666,6 @@ if __name__ == '__main__':
     print(f"📦  Inventario vinculado: {INVENTARIO_DB_PATH}")
     print("=" * 60)
 
-import os
-port = int(os.environ.get('PORT', 5002))
-app.run(host='0.0.0.0', port=port, debug=False)
+    import os
+    port = int(os.environ.get('PORT', 5002))
+    app.run(host='0.0.0.0', port=port, debug=False)
