@@ -1,8 +1,9 @@
+flask
 flask-sqlalchemy
 flask-cors
 requests
 python-dotenv
-pillow --only-binary :all:
+pillow
 werkzeug
 sqlalchemy
 gunicorn
