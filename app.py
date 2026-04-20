@@ -9,7 +9,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'una_clave_muy_segura_por_defecto')
+app.secret_key = 'tu_clave_secreta_aqui'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///trilak.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSON_SORT_KEYS'] = False
