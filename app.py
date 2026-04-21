@@ -190,6 +190,93 @@ class Produccion(db.Model):
         }
 
 
+# ======================== RUTAS DE AUTENTICACIÓN ========================
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.json
+    usuario = data.get('usuario')
+    contrasena = data.get('contrasena')
+    # Credenciales de acceso
+    if usuario == 'admin' and contrasena == 'trilak2026':
+        session['logged_in'] = True
+        return jsonify({'ok': True})
+    return jsonify({'ok': False, 'mensaje': 'Credenciales incorrectas'}), 401
+
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    session.pop('logged_in', None)
+    return jsonify({'ok': True})
+
+def login_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            return jsonify({'error': 'No autorizado. Por favor inicia sesión.'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+# ======================== RUTAS API PROTEGIDAS ========================
+
+@app.route('/api/tipos-balon', methods=['GET'])
+@login_required # <-- Ahora esta ruta es segura
+def get_tipos_balon():
+    tipos = TipoBalon.query.all()
+    return jsonify([t.to_dict() for t in tipos])
+
+@app.route('/api/operarios', methods=['GET', 'POST'])
+@login_required # <-- Protege la lista de operarios
+def operarios_route():
+    if request.method == 'GET':
+        ops = Operario.query.order_by(Operario.nombre).all()
+        return jsonify([op.to_dict() for op in ops])
+    
+    data = request.json
+    nuevo = Operario(nombre=data['nombre'].upper().strip())
+    db.session.add(nuevo)
+    db.session.commit()
+    return jsonify(nuevo.to_dict()), 201
+
+@app.route('/api/materiales', methods=['GET'])
+@login_required # <-- Protege el inventario
+def get_materiales():
+    materiales = Material.query.order_by(Material.nombre).all()
+    resultado = []
+    for m in materiales:
+        data = m.to_dict()
+        stock_real = get_stock_inventario(m.nombre)
+        data['cantidad_disponible'] = stock_real if stock_real >= 0 else m.cantidad_disponible
+        resultado.append(data)
+    return jsonify(resultado)
+
+@app.route('/api/pedidos', methods=['GET', 'POST'])
+@login_required # <-- Muy importante: protege tus pedidos y clientes
+def pedidos_route():
+    if request.method == 'GET':
+        peds = Pedido.query.order_by(Pedido.fecha_creacion.desc()).all()
+        return jsonify([p.to_dict() for p in peds])
+    # ... (resto de la lógica de POST pedidos)
+
+@app.route('/api/produccion', methods=['GET', 'POST'])
+@login_required # <-- Protege el registro de trabajo diario
+def produccion_route():
+    if request.method == 'GET':
+        registros = Produccion.query.order_by(Produccion.fecha.desc()).all()
+        return jsonify([r.to_dict() for r in registros])
+    # ... (resto de la lógica de POST producción)
+
+@app.route('/api/dashboard', methods=['GET'])
+@login_required # <-- Protege las métricas de tu empresa
+def dashboard():
+    return jsonify({
+        'metricas': {
+            'total_pedidos': Pedido.query.count(),
+            'pedidos_pendientes': Pedido.query.filter_by(estado='pendiente').count(),
+            'total_operarios': Operario.query.count(),
+            # ... resto de métricas
+        }
+    })
 # ======================== FUNCIONES DE INVENTARIO ========================
 
 def get_stock_inventario(nombre_material: str) -> float:
